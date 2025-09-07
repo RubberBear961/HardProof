@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "hardproof",
+	"version": "${version}",
+	"name": "HardProof",
+	"description": "This, mod adds a new gui that let's you check whether you cheated on selected world. Very usefull while trying to convince your friends that you never cheated on selected world.",
+	"authors": [
+		"Bieluuu"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/user/Bieluuu",
+		"sources": "https://modrinth.com/user/Bieluuu"
+	},
+	"license": "MIT",
+	"icon": "assets/hardproof/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.bieluuu.hardproof.HardProof"
+		],
+		"fabric-datagen": [
+			"net.bieluuu.hardproof.HardProofDataGenerator"
+		],
+		"client": [
+			"net.bieluuu.hardproof.HardProofClient"
+		]
+	},
+	"mixins": [
+		"hardproof.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.17.2",
+		"minecraft": "~1.21.8",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
