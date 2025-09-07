@@ -3,7 +3,8 @@
 	"package": "net.bieluuu.hardproof.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
+		"ExampleMixin",
+		"HardProofSingleplayerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
