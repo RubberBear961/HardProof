@@ -1,36 +1,56 @@
 package net.bieluuu.hardproof.mixin;
 
 
-
-import net.minecraft.client.gui.DrawContext;
+import net.bieluuu.hardproof.client.gui.HardProofScreen;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.world.SelectWorldScreen;
 import net.minecraft.client.gui.screen.world.WorldListWidget;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
+import net.minecraft.world.level.storage.LevelSummary;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(WorldListWidget.WorldEntry.class)
-public class HardProofSingleplayerMixin {
+@Mixin(SelectWorldScreen.class)
+public abstract class HardProofSingleplayerMixin extends Screen {
 
     @Shadow
-    private net.minecraft.client.MinecraftClient client;
+    private WorldListWidget levelList;
+    @Unique
+    private ButtonWidget hardproofButton;
 
-    @Inject(at = @At("RETURN"), method = "render")
-    private void addHardProofButton(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickProgress, CallbackInfo ci) {
+    protected HardProofSingleplayerMixin(Text title) {
+        super(title);
+    }
 
+    @Inject(at = @At("RETURN"), method = "init")
+    private void addHardproofButton(CallbackInfo ci) {
+        this.hardproofButton = this.addDrawableChild(
+                ButtonWidget.builder(Text.translatable("HardProof"), button -> {
+                            this.levelList.getSelectedAsOptional().ifPresent(entry -> {
+                                MinecraftClient client = MinecraftClient.getInstance();
+                                client.setScreen(new HardProofScreen(client.currentScreen));
+                            });
+                        })
+                        .dimensions(this.width / 2 - 154 - 72 - 5, this.height - 28, 72, 20)
+                        .build()
+        );
+        this.hardproofButton.active = false;
+    }
 
-        int buttonWidth = 20;
-        int buttonHeight = 20;
-        int buttonX = x + entryWidth + 10; // +10 px poza prawą krawędź świata
-        int buttonY = y + (entryHeight - buttonHeight) / 2;
-
-        // rysowanie prostego prostokątnego przycisku
-        context.fill(buttonX, buttonY, buttonX + buttonWidth, buttonY + buttonHeight, 0xFF555555);
-        context.drawTextWithShadow(this.client.textRenderer, Text.of("!"), buttonX + 5, buttonY + 5, Colors.WHITE);
-
+    @Inject(at = @At("RETURN"), method = "worldSelected")
+    private void checkHardproof(LevelSummary levelSummary, CallbackInfo ci) {
+        if (this.hardproofButton != null) {
+            this.hardproofButton.active = levelSummary != null && levelSummary.isEditable();
+        }
     }
 
 }
+
+
+
