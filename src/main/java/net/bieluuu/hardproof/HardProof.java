@@ -1,5 +1,6 @@
 package net.bieluuu.hardproof;
 
+import net.bieluuu.hardproof.client.gui.HardProofScreenTempData;
 import net.bieluuu.hardproof.item.ModItems;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -9,6 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static net.bieluuu.hardproof.CheatDataManager.odczytajPlikPcd;
+import static net.bieluuu.hardproof.CheatDataManager.stworzPlikPcd;
 
 public class HardProof implements ModInitializer {
     public static final String MOD_ID = "hardproof";
@@ -30,13 +37,36 @@ public class HardProof implements ModInitializer {
             currentServer = server;
             currentWorldName = getCurrentWorldName(server);
             currentWorldPath = getCurrentWorldPath(server);
-            LOGGER.info("✅ Player entered world: {}", currentWorldName);
-            LOGGER.info("📁 Full path: {}", currentWorldPath);
+            /// player entered sequence
+            String content = "";
+            String path = String.valueOf(HardProof.getCurrentWorldPath());
+            String odczytanaZawartosc = odczytajPlikPcd(path);
+                if (odczytanaZawartosc == null) {
+                    boolean utworzono = stworzPlikPcd(path, content);
+                    if (utworzono) {
+                        String odczytanaZawartosc2 = odczytajPlikPcd(path);
+                        HardProofScreenTempData.currentPcdFileContent = odczytanaZawartosc2;
+                    }
+                else {
+                    HardProofScreenTempData.currentPcdFileContent = odczytanaZawartosc;
+                    }
+            }
+            // Zamiast while(true) użyj:
+            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+            scheduler.scheduleAtFixedRate(() -> {
+                if (currentWorldPath != null) {
+                    stworzPlikPcd(String.valueOf(currentWorldPath),
+                            HardProofScreenTempData.currentPcdFileContent);
+                }
+            }, 1, 1, TimeUnit.MINUTES);
+
         });
 
         // Event gdy serwer (świat) się zatrzymuje
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            LOGGER.info("🚪 Player left world: {}", currentWorldName);
+            /// lefty the world sequence
+            String path = String.valueOf(HardProof.getCurrentWorldPath());
+            boolean created = stworzPlikPcd(path, HardProofScreenTempData.currentPcdFileContent);
             currentServer = null;
             currentWorldName = null;
             currentWorldPath = null;
